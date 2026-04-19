@@ -61,12 +61,12 @@ The worker applies the **Polling Consumer pattern** — it queries MongoDB on an
 
 ### Pattern Summary
 
-| Concern | Pattern |
-|---|---|
-| Transition strategy | Strangler Fig |
-| Worker consumption model | Polling Consumer |
+| Concern                      | Pattern                              |
+| ---------------------------- | ------------------------------------ |
+| Transition strategy          | Strangler Fig                        |
+| Worker consumption model     | Polling Consumer                     |
 | Delivery channel abstraction | Strategy (swap SMTP for Slack, etc.) |
-| Shared logic extraction | Shared Kernel (npm package) |
+| Shared logic extraction      | Shared Kernel (npm package)          |
 
 > **Trade-off:** The worker is still tightly coupled to the database schema. Any MongoDB schema change in the `Communications` collection breaks the worker directly. The two services share a data store — the **Shared Database integration pattern** — which is pragmatic but limits independent deployability.
 
@@ -100,12 +100,12 @@ The worker applies the **Remote Facade pattern** — it treats MZinga as an opaq
 
 ### Pattern Summary
 
-| Concern | Pattern |
-|---|---|
-| Integration style | REST / Remote Facade |
-| Data ownership | Single owner (MZinga owns the data, worker is a consumer) |
-| Auth | JWT Bearer token (already in place via Payload's auth system) |
-| Coupling level | Contract coupling (HTTP schema) instead of data coupling (DB schema) |
+| Concern           | Pattern                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| Integration style | REST / Remote Facade                                                 |
+| Data ownership    | Single owner (MZinga owns the data, worker is a consumer)            |
+| Auth              | JWT Bearer token (already in place via Payload's auth system)        |
+| Coupling level    | Contract coupling (HTTP schema) instead of data coupling (DB schema) |
 
 > **Trade-off:** The worker is now decoupled from the database schema, but it still **polls** — introducing latency between document creation and delivery, and unnecessary load on the API when there is nothing to process. This is solved in the next step.
 
@@ -145,15 +145,15 @@ The worker is now a pure **event consumer** — it subscribes to the `mzinga_eve
 
 ### Pattern Summary
 
-| Concern | Pattern |
-|---|---|
-| Integration style | Event-Driven Architecture |
-| Messaging model | Publish/Subscribe (topic exchange, durable queue) |
-| Event durability | Guaranteed via `mzinga_events_durable` exchange (already configured) |
-| Worker consumption | Competing Consumers (multiple instances for horizontal scaling) |
-| Delivery channel | Strategy pattern |
-| Retry / dead-letter | Handled at the RabbitMQ level, outside the monolith |
-| Monolith change required | Zero — only an `.env` variable |
+| Concern                  | Pattern                                                              |
+| ------------------------ | -------------------------------------------------------------------- |
+| Integration style        | Event-Driven Architecture                                            |
+| Messaging model          | Publish/Subscribe (topic exchange, durable queue)                    |
+| Event durability         | Guaranteed via `mzinga_events_durable` exchange (already configured) |
+| Worker consumption       | Competing Consumers (multiple instances for horizontal scaling)      |
+| Delivery channel         | Strategy pattern                                                     |
+| Retry / dead-letter      | Handled at the RabbitMQ level, outside the monolith                  |
+| Monolith change required | Zero — only an `.env` variable                                       |
 
 ---
 

@@ -72,7 +72,7 @@ If sending a communication involves multiple steps that can each fail independen
 
 > In MZinga's current scope this is likely over-engineering, but it becomes relevant as soon as a single `Communications` document needs to dispatch to multiple channels and partial failure needs to be handled gracefully.
 
-### Event Sourcing *(future consideration)*
+### Event Sourcing _(future consideration)_
 
 Rather than storing only the current `status` of a `Communications` document, store every state transition as an immutable event: `created`, `pending`, `dispatching`, `sent`, `failed`, `retried`. The current state is derived by replaying the events. This gives a complete audit trail of every delivery attempt — who was notified, when, via which channel, and whether it succeeded — which is directly relevant for compliance in enterprise and SaaS contexts.
 
@@ -80,20 +80,20 @@ Rather than storing only the current `status` of a `Communications` document, st
 
 ## Summary Map
 
-| Phase | Pattern | Concern it solves |
-|---|---|---|
-| Monolith | Anti-Corruption Layer | Prevents MZinga's internal model leaking into the worker |
-| Monolith | Facade | Abstracts delivery channel behind a common interface |
-| Migration | Branch by Abstraction | Safe in-process switch between old and new dispatcher |
-| Migration | Parallel Run | Validates new worker against old path before cutover |
-| Migration | Feature Toggle | Runtime switch without redeployment, instant rollback |
-| Worker | Outbox Pattern | Guarantees at-least-once delivery without distributed transactions |
-| Worker | Idempotent Consumer | Prevents duplicate sends on message redelivery |
-| Worker | Dead Letter Queue | Isolates poison messages, enables retry without blocking the queue |
-| Worker | Competing Consumers | Horizontal scaling with no coordination logic |
-| Event-driven | Event Carried State Transfer | Eliminates REST API call, reduces latency |
-| Event-driven | Saga | Coordinates multi-channel dispatch with compensatable steps |
-| Event-driven | Event Sourcing | Full audit trail of every delivery attempt |
+| Phase        | Pattern                      | Concern it solves                                                  |
+| ------------ | ---------------------------- | ------------------------------------------------------------------ |
+| Monolith     | Anti-Corruption Layer        | Prevents MZinga's internal model leaking into the worker           |
+| Monolith     | Facade                       | Abstracts delivery channel behind a common interface               |
+| Migration    | Branch by Abstraction        | Safe in-process switch between old and new dispatcher              |
+| Migration    | Parallel Run                 | Validates new worker against old path before cutover               |
+| Migration    | Feature Toggle               | Runtime switch without redeployment, instant rollback              |
+| Worker       | Outbox Pattern               | Guarantees at-least-once delivery without distributed transactions |
+| Worker       | Idempotent Consumer          | Prevents duplicate sends on message redelivery                     |
+| Worker       | Dead Letter Queue            | Isolates poison messages, enables retry without blocking the queue |
+| Worker       | Competing Consumers          | Horizontal scaling with no coordination logic                      |
+| Event-driven | Event Carried State Transfer | Eliminates REST API call, reduces latency                          |
+| Event-driven | Saga                         | Coordinates multi-channel dispatch with compensatable steps        |
+| Event-driven | Event Sourcing               | Full audit trail of every delivery attempt                         |
 
 ---
 

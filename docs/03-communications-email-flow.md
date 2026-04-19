@@ -26,7 +26,9 @@ Every time a `Communications` document is **created or updated** in MongoDB, Pay
 ```ts
 const { tos, ccs, bccs, subject, body } = doc;
 for (const part of body) {
-  if (part.type !== "upload") { continue; }
+  if (part.type !== "upload") {
+    continue;
+  }
   const doc = await payload.findByID({
     collection: relationToSlug,
     id: part.value.id,
@@ -85,13 +87,17 @@ The same pattern is repeated for CC and BCC recipients, producing comma-separate
 for (const to of usersEmails) {
   const message = {
     from: payload.emailOptions.fromAddress,
-    subject, to, cc, bcc, html,
+    subject,
+    to,
+    cc,
+    bcc,
+    html,
   };
   promises.push(
     MailUtils.sendMail(payload, message).catch((e) => {
       MZingaLogger.Instance?.error(`[Communications:err] ${e}`);
       return null;
-    })
+    }),
   );
 }
 await Promise.all(promises.filter((p) => Boolean(p)));
@@ -146,14 +152,14 @@ The hook no longer resolves users, serializes HTML, or calls SMTP. It publishes 
 
 The microservice subscribes to the `communications.send` queue and, for each message received:
 
-| Step | Action | Current code reference |
-|------|--------|------------------------|
-| 1 | Fetch the full `Communications` document from MongoDB by `id` | — |
-| 2 | Run the upload-enrichment loop | `Communications.ts` lines 38–47 |
-| 3 | Serialize rich-text body to HTML | `TextUtils.ts` lines 17–88 |
-| 4 | Resolve `tos`, `ccs`, `bccs` to email addresses from MongoDB | `Communications.ts` lines 50–79 |
-| 5 | Dispatch via the appropriate channel (SMTP, Slack, etc.) based on a `channel` field | `MailUtils.ts` lines 12–13 |
-| 6 | Write back a `status` field (`sent` / `failed`) to the document | — |
+| Step | Action                                                                              | Current code reference          |
+| ---- | ----------------------------------------------------------------------------------- | ------------------------------- |
+| 1    | Fetch the full `Communications` document from MongoDB by `id`                       | —                               |
+| 2    | Run the upload-enrichment loop                                                      | `Communications.ts` lines 38–47 |
+| 3    | Serialize rich-text body to HTML                                                    | `TextUtils.ts` lines 17–88      |
+| 4    | Resolve `tos`, `ccs`, `bccs` to email addresses from MongoDB                        | `Communications.ts` lines 50–79 |
+| 5    | Dispatch via the appropriate channel (SMTP, Slack, etc.) based on a `channel` field | `MailUtils.ts` lines 12–13      |
+| 6    | Write back a `status` field (`sent` / `failed`) to the document                     | —                               |
 
 ---
 

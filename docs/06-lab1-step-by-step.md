@@ -150,6 +150,7 @@ Observe the document structure:
 ```
 
 Key observations:
+
 - `tos`, `ccs`, `bccs` store **relationship references** — `{ relationTo: "users", value: <ObjectId> }` — not email addresses directly. The Python worker must resolve them by querying the `users` collection.
 - `body` is a **Slate AST** — an array of node objects. The Python worker must convert this to HTML to build the email body.
 - There is **no `status` field** yet. You will add one in Step 3.
@@ -157,7 +158,7 @@ Key observations:
 Also inspect the users collection to understand the email field:
 
 ```js
-db.users.findOne({}, { email: 1 })
+db.users.findOne({}, { email: 1 });
 ```
 
 ---
@@ -168,16 +169,17 @@ The current `Communications` collection has no `status` field. The Python worker
 
 ### 3.1 Required statuses
 
-| Value | Set by | Meaning |
-|---|---|---|
-| `pending` | MZinga `afterChange` hook | Document saved, waiting for the worker to process it |
-| `processing` | Python worker | Worker has picked up the document and is sending |
-| `sent` | Python worker | All emails dispatched successfully |
-| `failed` | Python worker | Sending failed; see logs for details |
+| Value        | Set by                    | Meaning                                              |
+| ------------ | ------------------------- | ---------------------------------------------------- |
+| `pending`    | MZinga `afterChange` hook | Document saved, waiting for the worker to process it |
+| `processing` | Python worker             | Worker has picked up the document and is sending     |
+| `sent`       | Python worker             | All emails dispatched successfully                   |
+| `failed`     | Python worker             | Sending failed; see logs for details                 |
 
 ### 3.2 Add the field to `Communications.ts`
 
 In `src/collections/Communications.ts`, add a new field to the `fields` array with the following characteristics:
+
 - name: `status`
 - type: `select` with the four options above
 - marked as `readOnly` in the admin UI
@@ -211,12 +213,14 @@ In `src/collections/Communications.ts`, modify the `afterChange` hook body so th
 ### 4.3 Verify the flag works
 
 With `COMMUNICATIONS_EXTERNAL_WORKER=true`:
+
 - Create a new Communication document in the admin UI
 - The HTTP request should return immediately (no SMTP delay)
 - The document should show `status: pending` in the admin UI
 - No email log should appear in the terminal
 
 With `COMMUNICATIONS_EXTERNAL_WORKER=false` (or unset):
+
 - The original behaviour is restored: email is logged to the console (because `DEBUG_EMAIL_SEND=1`) and the request blocks until done
 
 ---
@@ -252,9 +256,11 @@ EMAIL_FROM=worker@mzinga.io
 ```
 
 > For local testing without a real SMTP server, use [MailHog](https://github.com/mailhog/MailHog):
+>
 > ```sh
 > docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
 > ```
+>
 > Sent emails appear at `http://localhost:8025`.
 
 ### 5.4 `worker.py` — what to implement
@@ -305,14 +311,14 @@ To test failure handling, temporarily stop the worker, create a Communication, t
 
 ## What you have built
 
-| Concern | Implementation |
-|---|---|
-| Transition strategy | Strangler Fig — old hook preserved behind a feature flag |
-| Feature flag | `COMMUNICATIONS_EXTERNAL_WORKER=true` in `.env` |
-| New status field | `pending` → `processing` → `sent` / `failed` |
-| Worker integration | Shared Database (direct MongoDB access) |
-| Worker consumption model | Polling Consumer (interval-based query) |
-| Rollback | Set `COMMUNICATIONS_EXTERNAL_WORKER=false`, restart MZinga |
+| Concern                  | Implementation                                             |
+| ------------------------ | ---------------------------------------------------------- |
+| Transition strategy      | Strangler Fig — old hook preserved behind a feature flag   |
+| Feature flag             | `COMMUNICATIONS_EXTERNAL_WORKER=true` in `.env`            |
+| New status field         | `pending` → `processing` → `sent` / `failed`               |
+| Worker integration       | Shared Database (direct MongoDB access)                    |
+| Worker consumption model | Polling Consumer (interval-based query)                    |
+| Rollback                 | Set `COMMUNICATIONS_EXTERNAL_WORKER=false`, restart MZinga |
 
 ## Known limitations (addressed in Lab 2)
 
