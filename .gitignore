@@ -10,5 +10,8 @@
 .vscode/
 *.code-workspace
 
+# JetBrains
+.idea/
+
 # MZinga local clone
 mzinga/
